@@ -1,0 +1,28 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: card-game-db
+    environment:
+      POSTGRES_USER: cardgame
+      POSTGRES_PASSWORD: cardgame123
+      POSTGRES_DB: cardgame
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./database/init:/docker-entrypoint-initdb.d
+    restart: unless-stopped
+
+  adminer:
+    image: adminer
+    container_name: card-game-adminer
+    ports:
+      - "8080:8080"
+    depends_on:
+      - postgres
+    restart: unless-stopped
+
+volumes:
+  postgres_data:

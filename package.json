@@ -1,0 +1,27 @@
+{
+  "name": "card-game-multiplayer",
+  "version": "1.0.0",
+  "description": "Multiplayer card game with React/Phaser frontend and Go backend",
+  "workspaces": [
+    "frontend",
+    "backend"
+  ],
+  "scripts": {
+    "dev:frontend": "cd frontend && bun run dev",
+    "dev:backend": "cd backend && go run cmd/main.go",
+    "build:frontend": "cd frontend && bun run build",
+    "build:backend": "cd backend && go build -o bin/server cmd/main.go",
+    "install:all": "bun install && cd frontend && bun install",
+    "start:dev": "concurrently \"bun run dev:backend\" \"bun run dev:frontend\"",
+    "docker:up": "docker-compose up -d",
+    "docker:down": "docker-compose down",
+    "test:frontend": "cd frontend && bun test",
+    "lint:frontend": "cd frontend && bun run lint"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
