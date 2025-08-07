@@ -1,0 +1,117 @@
+.game-ui {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  width: 300px;
+  background: rgba(255, 255, 255, 0.95);
+  border-radius: 12px;
+  padding: 20px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+  backdrop-filter: blur(10px);
+}
+
+.game-info {
+  margin-bottom: 20px;
+  padding-bottom: 15px;
+  border-bottom: 1px solid #eee;
+}
+
+.game-id, .game-phase {
+  font-size: 14px;
+  color: #666;
+  margin-bottom: 5px;
+}
+
+.players-info {
+  margin-bottom: 20px;
+}
+
+.players-info h3 {
+  margin: 0 0 10px 0;
+  color: #333;
+  font-size: 16px;
+}
+
+.player-item {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 10px;
+  margin-bottom: 8px;
+  background: #f8f9fa;
+  border-radius: 6px;
+  font-size: 12px;
+}
+
+.player-item.current-player {
+  background: #e3f2fd;
+  border: 2px solid #2196F3;
+}
+
+.player-name {
+  font-weight: 600;
+  color: #333;
+}
+
+.player-cards, .player-score {
+  color: #666;
+}
+
+.game-controls {
+  margin-bottom: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.deal-cards-btn {
+  padding: 12px 16px;
+  background: #4CAF50;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.3s ease;
+}
+
+.deal-cards-btn:hover:not(:disabled) {
+  background: #45a049;
+}
+
+.deal-cards-btn:disabled {
+  background: #ccc;
+  cursor: not-allowed;
+}
+
+.turn-indicator {
+  padding: 8px 12px;
+  background: #ff9800;
+  color: white;
+  text-align: center;
+  border-radius: 6px;
+  font-weight: 600;
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0% { opacity: 1; }
+  50% { opacity: 0.7; }
+  100% { opacity: 1; }
+}
+
+.shared-zone-info {
+  padding-top: 15px;
+  border-top: 1px solid #eee;
+}
+
+.shared-zone-info h3 {
+  margin: 0 0 10px 0;
+  color: #333;
+  font-size: 16px;
+}
+
+.shared-cards-count {
+  font-size: 14px;
+  color: #666;
+}

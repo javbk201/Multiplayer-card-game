@@ -1,22 +1,28 @@
-import { GameCanvas } from './components/GameCanvas'
-import { GameUI } from './components/GameUI'
-import { StartScreen } from './components/StartScreen'
-import { useGameStore } from './stores/gameStore'
-import './App.css'
-import './components/GameUI.css'
+import { useState } from 'react';
+import { StartScreen } from './screens/start-screen/StartScreen';
+import { GameScreen } from './screens/game-screen/GameScreen';
+import { GameScene } from './shared/types/game.types';
+import './App.css';
 
 function App() {
-  const currentScene = useGameStore(state => state.currentScene);
+  const [currentScene, setCurrentScene] = useState<GameScene>('start');
+
+  const handleSceneChange = (scene: GameScene) => {
+    setCurrentScene(scene);
+  };
 
   return (
     <div className="app">
       <div className="game-container">
-        <GameCanvas className="game-canvas" />
-        {currentScene === 'start' && <StartScreen />}
-        {currentScene === 'game' && <GameUI />}
+        {currentScene === 'start' && (
+          <StartScreen onSceneChange={handleSceneChange} />
+        )}
+        {currentScene === 'game' && (
+          <GameScreen />
+        )}
       </div>
     </div>
-  )
+  );
 }
 
-export default App
+export default App;

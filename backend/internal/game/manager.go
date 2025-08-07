@@ -72,12 +72,8 @@ func (gm *GameManager) JoinGame(gameID, playerName string) (*Game, *Player, erro
 	// Create new player
 	player := NewPlayer(playerName)
 	
-	// Deal initial hand (5 cards)
-	hand, err := gm.dealCards(game, 5)
-	if err != nil {
-		return nil, nil, err
-	}
-	player.Hand = hand
+	// Don't deal cards automatically - wait for deal cards message
+	player.Hand = make([]Card, 0)
 
 	// Add player to game
 	game.Players = append(game.Players, player)
@@ -194,8 +190,9 @@ func (gm *GameManager) PlayCard(gameID, playerID string, card Card) (*Game, erro
 		game.Players[playerIndex].Hand[cardIndex+1:]...,
 	)
 
-	// Add to played cards
+	// Add to played cards and shared zone
 	game.PlayedCards = append(game.PlayedCards, card)
+	game.SharedZone = append(game.SharedZone, card)
 
 	// Move to next player
 	gm.nextPlayer(game)
@@ -274,6 +271,88 @@ func (gm *GameManager) ListGames() []*Game {
 		games = append(games, game)
 	}
 	return games
+}
+
+// DealCards deals cards to all players in a game
+func (gm *GameManager) DealCards(gameID string) (*Game, error) {
+	gm.mutex.Lock()
+	defer gm.mutex.Unlock()
+
+	game, exists := gm.games[gameID]
+	if !exists {
+		return nil, errors.New("game not found")
+	}
+
+	if len(game.Players) < 2 {
+		return nil, errors.New("need at least 2 players to deal cards")
+	}
+
+	// Deal 5 cards to each player
+	cardsPerPlayer := 5
+	for i := range game.Players {
+		hand, err := gm.dealCards(game, cardsPerPlayer)
+		if err != nil {
+			return nil, err
+		}
+		game.Players[i].Hand = hand
+	}
+
+	// Start the game if it was waiting
+	if game.Phase == PhaseWaiting {
+		game.Phase = PhasePlaying
+	}
+
+	game.UpdatedAt = time.Now()
+	return game, nil
+}
+
+// DropCardInSharedZone moves a card to the shared zone
+func (gm *GameManager) DropCardInSharedZone(gameID, playerID string, card Card, position Position) (*Game, error) {
+	gm.mutex.Lock()
+	defer gm.mutex.Unlock()
+
+	game, exists := gm.games[gameID]
+	if !exists {
+		return nil, errors.New("game not found")
+	}
+
+	// Find player
+	playerIndex := -1
+	for i, player := range game.Players {
+		if player.ID == playerID {
+			playerIndex = i
+			break
+		}
+	}
+
+	if playerIndex == -1 {
+		return nil, errors.New("player not found")
+	}
+
+	// Find and remove card from player's hand
+	cardIndex := -1
+	for i, handCard := range game.Players[playerIndex].Hand {
+		if handCard.ID == card.ID {
+			cardIndex = i
+			break
+		}
+	}
+
+	if cardIndex == -1 {
+		return nil, errors.New("card not found in player's hand")
+	}
+
+	// Remove card from hand
+	game.Players[playerIndex].Hand = append(
+		game.Players[playerIndex].Hand[:cardIndex],
+		game.Players[playerIndex].Hand[cardIndex+1:]...,
+	)
+
+	// Add to shared zone
+	game.SharedZone = append(game.SharedZone, card)
+
+	game.UpdatedAt = time.Now()
+	return game, nil
 }
 
 // CleanupGame removes a game from memory

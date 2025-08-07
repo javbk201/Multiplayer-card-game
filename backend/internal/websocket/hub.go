@@ -219,6 +219,10 @@ func (c *Client) handleMessage(message game.WebSocketMessage) {
 		c.handleJoinGame(message)
 	case game.MsgPlayCard:
 		c.handlePlayCard(message)
+	case game.MsgDealCards:
+		c.handleDealCards(message)
+	case game.MsgDropCardShared:
+		c.handleDropCardShared(message)
 	default:
 		log.Printf("Unknown message type: %s", message.Type)
 	}
@@ -338,6 +342,106 @@ func (c *Client) handlePlayCard(message game.WebSocketMessage) {
 		if messageBytes, err := json.Marshal(endMessage); err == nil {
 			c.hub.broadcastToGame(c.gameID, messageBytes)
 		}
+	}
+}
+
+func (c *Client) handleDealCards(message game.WebSocketMessage) {
+	if c.gameID == "" {
+		c.sendError("Not in a game")
+		return
+	}
+
+	updatedGame, err := c.hub.gameManager.DealCards(c.gameID)
+	if err != nil {
+		c.sendError(err.Error())
+		return
+	}
+
+	// Broadcast cards dealt message
+	dealtMessage := game.WebSocketMessage{
+		Type: game.MsgCardsDealt,
+		Data: game.GameStateData{Game: *updatedGame},
+	}
+	
+	if messageBytes, err := json.Marshal(dealtMessage); err == nil {
+		c.hub.broadcastToGame(c.gameID, messageBytes)
+	}
+
+	// Broadcast updated game state
+	stateMessage := game.WebSocketMessage{
+		Type: game.MsgGameState,
+		Data: game.GameStateData{Game: *updatedGame},
+	}
+	
+	if messageBytes, err := json.Marshal(stateMessage); err == nil {
+		c.hub.broadcastToGame(c.gameID, messageBytes)
+	}
+}
+
+func (c *Client) handleDropCardShared(message game.WebSocketMessage) {
+	if c.gameID == "" || c.playerID == "" {
+		c.sendError("Not in a game")
+		return
+	}
+
+	data, ok := message.Data.(map[string]interface{})
+	if !ok {
+		c.sendError("Invalid drop card data")
+		return
+	}
+
+	cardData, ok := data["card"].(map[string]interface{})
+	if !ok {
+		c.sendError("Card data is required")
+		return
+	}
+
+	positionData, ok := data["position"].(map[string]interface{})
+	if !ok {
+		c.sendError("Position data is required")
+		return
+	}
+
+	card := game.Card{
+		ID:    cardData["id"].(string),
+		Suit:  game.Suit(cardData["suit"].(string)),
+		Rank:  cardData["rank"].(string),
+		Value: int(cardData["value"].(float64)),
+	}
+
+	position := game.Position{
+		X: positionData["x"].(float64),
+		Y: positionData["y"].(float64),
+	}
+
+	updatedGame, err := c.hub.gameManager.DropCardInSharedZone(c.gameID, c.playerID, card, position)
+	if err != nil {
+		c.sendError(err.Error())
+		return
+	}
+
+	// Broadcast card dropped
+	droppedMessage := game.WebSocketMessage{
+		Type: game.MsgCardDropped,
+		Data: game.CardDroppedData{
+			PlayerID: c.playerID,
+			Card:     card,
+			Position: position,
+		},
+	}
+	
+	if messageBytes, err := json.Marshal(droppedMessage); err == nil {
+		c.hub.broadcastToGame(c.gameID, messageBytes)
+	}
+
+	// Broadcast updated game state
+	stateMessage := game.WebSocketMessage{
+		Type: game.MsgGameState,
+		Data: game.GameStateData{Game: *updatedGame},
+	}
+	
+	if messageBytes, err := json.Marshal(stateMessage); err == nil {
+		c.hub.broadcastToGame(c.gameID, messageBytes)
 	}
 }
 

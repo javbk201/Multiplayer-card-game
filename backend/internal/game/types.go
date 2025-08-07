@@ -45,6 +45,7 @@ type Game struct {
 	Phase         GamePhase `json:"gamePhase"`
 	Deck          []Card    `json:"-"`
 	PlayedCards   []Card    `json:"playedCards"`
+	SharedZone    []Card    `json:"sharedZone"`
 	CreatedAt     time.Time `json:"createdAt"`
 	UpdatedAt     time.Time `json:"updatedAt"`
 }
@@ -53,15 +54,19 @@ type Game struct {
 type MessageType string
 
 const (
-	MsgJoinGame    MessageType = "join_game"
-	MsgLeaveGame   MessageType = "leave_game"
-	MsgPlayCard    MessageType = "play_card"
-	MsgGameState   MessageType = "game_state"
-	MsgPlayerJoined MessageType = "player_joined"
-	MsgPlayerLeft   MessageType = "player_left"
-	MsgCardPlayed   MessageType = "card_played"
-	MsgGameEnded    MessageType = "game_ended"
-	MsgError        MessageType = "error"
+	MsgJoinGame        MessageType = "join_game"
+	MsgLeaveGame       MessageType = "leave_game"
+	MsgPlayCard        MessageType = "play_card"
+	MsgDealCards       MessageType = "deal_cards"
+	MsgDropCardShared  MessageType = "drop_card_shared"
+	MsgGameState       MessageType = "game_state"
+	MsgPlayerJoined    MessageType = "player_joined"
+	MsgPlayerLeft      MessageType = "player_left"
+	MsgCardPlayed      MessageType = "card_played"
+	MsgCardsDealt      MessageType = "cards_dealt"
+	MsgCardDropped     MessageType = "card_dropped"
+	MsgGameEnded       MessageType = "game_ended"
+	MsgError           MessageType = "error"
 )
 
 type WebSocketMessage struct {
@@ -96,6 +101,17 @@ type PlayerLeftData struct {
 type CardPlayedData struct {
 	PlayerID string `json:"playerId"`
 	Card     Card   `json:"card"`
+}
+
+type CardDroppedData struct {
+	PlayerID string  `json:"playerId"`
+	Card     Card    `json:"card"`
+	Position Position `json:"position"`
+}
+
+type Position struct {
+	X float64 `json:"x"`
+	Y float64 `json:"y"`
 }
 
 type ErrorData struct {
@@ -133,6 +149,7 @@ func NewGame() *Game {
 		Phase:         PhaseWaiting,
 		Deck:          createDeck(),
 		PlayedCards:   make([]Card, 0),
+		SharedZone:    make([]Card, 0),
 		CreatedAt:     time.Now(),
 		UpdatedAt:     time.Now(),
 	}
